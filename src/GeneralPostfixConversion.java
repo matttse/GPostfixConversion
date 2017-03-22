@@ -2,39 +2,50 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Stack;
 import java.util.StringTokenizer;
+//import java.util.stream.Collectors;
 
 public class GeneralPostfixConversion {
 
 	public static void main(String[] args) {
-		//while there is an expression to read
-		//reads infix expression from input file
-		//store it in array of strings named tokens
-		//prints the converted postfix expression
+		//throws IOException
 		try {
 			File file = new File("C:/infixExpressions.txt");
 			FileReader fileReader = new FileReader(file);
 			BufferedReader bufferedReader = new BufferedReader(fileReader);
 			StringBuffer stringBuffer = new StringBuffer();
 			String line;
-			
+			String[] tokens;//store it in array of strings named tokens 
+			//while there is an expression to read
+			//reads infix expression from input file
 			while ((line = bufferedReader.readLine()) != null) {
 				stringBuffer.append(line);
 				stringBuffer.append("\n");
-			}
+			}//end while expressions
+			//cleanup
 			stringBuffer.trimToSize();
-
-			String testout = "";
-	
-			
-			System.out.println(testout);
 			fileReader.close();
-			System.out.println("Contents of file:");
+			
+			//instantiate size of array of strings
+			tokens = new String[stringBuffer.length()];
+			//loop through string
+			for (int i = 0; i < stringBuffer.length(); i++) {
+				if (stringBuffer.charAt(i) != 32) {//check for ascii space
+					tokens[i] = String.valueOf(stringBuffer.charAt(i));					
+				}
+//				tokens = Arrays.stream(tokens).filter(s -> (s != null && s.length() > 0)).toArray(String[]::new);
+				System.out.println(tokens[i]);
+
+			}//end for loop
+			System.out.println("Contents of file:");		
 			System.out.println(stringBuffer.toString());
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
+		}//end trycatch
+		
+		//TODO prints the converted postfix expression
 
 	}
 	//end main method
