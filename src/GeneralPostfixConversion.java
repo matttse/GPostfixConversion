@@ -7,8 +7,7 @@ import java.util.StringTokenizer;
 
 public class GeneralPostfixConversion {
 
-	//TODO
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) {
 		//while there is an expression to read
 		//reads infix expression from input file
 		//store it in array of strings named tokens
@@ -22,10 +21,10 @@ public class GeneralPostfixConversion {
 			
 			while ((line = bufferedReader.readLine()) != null) {
 				stringBuffer.append(line);
+				stringBuffer.append("\n");
 			}
 			stringBuffer.trimToSize();
 
-			int col = 0;
 			String testout = "";
 	
 			
@@ -37,7 +36,9 @@ public class GeneralPostfixConversion {
 			e.printStackTrace();
 		}
 
-	}//end main method
+	}
+	//end main method
+	
 	//infix only assuming integers no doubles
 	//TODO toPostFix
 	public String toPostFix(String[] tokens) {
@@ -136,5 +137,6 @@ public class GeneralPostfixConversion {
 		}
 		return (operandStack.peek());
 	}
+	
 
 }
