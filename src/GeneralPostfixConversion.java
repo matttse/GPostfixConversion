@@ -3,9 +3,22 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
+
 
 public class GeneralPostfixConversion {
-
+/*
+3 * 12
+3 * X
+( Y - 12 )
+3 * X + ( Y )
+3 * X + ( 12 ) - Z 
+3 * X + ( Y - 12 ) 
+3 * X + ( Y - 12 ) - Z 
+(((A+B)*C)-((D-E)*(F+G)))
+ * 
+ */
 	public static void main(String[] args) {
 		//throws IOException
 		try {
@@ -14,37 +27,46 @@ public class GeneralPostfixConversion {
 			BufferedReader bufferedReader = new BufferedReader(fileReader);
 			StringBuffer stringBuffer = new StringBuffer();
 			String line;
-			ArrayList<String> tokenBuffer =  new ArrayList<String>();//temporary storage
-			String[] tokens;//store it in array of strings named tokens 
-			String testout = "";
-			
+			String[] tokenBufferLine;//stores each line expression
+			String expression;
+			String[] tokens;//tokens expression 
 			
 			//while there is an expression to read
 			//reads infix expression from input file
 			while ((line = bufferedReader.readLine()) != null) {
-				stringBuffer.append(line);
-				stringBuffer.append("\n");
+				if (isBalanced(line)) {
+					stringBuffer.append(line);
+					stringBuffer.append(";\n");						
+					
+					
+				} else {
+					System.out.println(line);
+					System.out.println("Not Balanced, fix infix expression\n");
+				}
+
 			}//end while expressions
 			//cleanup
 			stringBuffer.trimToSize();
 			fileReader.close();
-
-			//loop through raw input
-			for (int i = 0; i < stringBuffer.length(); i++) {				
-				if (stringBuffer.charAt(i) != 32) {//check for ascii space
-					tokenBuffer.add(String.valueOf(stringBuffer.charAt(i))); 				
-				}
-			}//end for loop
-			
 			//instantiate size of array of strings
-			tokens = new String[tokenBuffer.size()];
-			//loop through arraylist
-			for (int i = 0; i < tokenBuffer.size(); i++) {
-				tokens[i] = String.valueOf(tokenBuffer.get(i)); 				
-//				System.out.println(tokens[i]);
-			}//end for loop	
-			System.out.print(toPostFix(tokens));
+			tokenBufferLine = stringBuffer.toString().split(";");
+			for (int i = 0; i < tokenBufferLine.length; i++) {
+				expression = tokenBufferLine[i].replaceAll("\\s",  "");//.split(" ");
+				tokens = new String[expression.length()];
+				for (int j = 0; j < expression.length(); j++) {
+					tokens[j] = String.valueOf(expression.charAt(j));
+
+				}
+				//only process if there are balanced legal stored expressions
+				if (tokens.length > 0) {
+					
+					System.out.println(toPostFix(tokens));
+					System.out.println("---------------------");
+					
+				}	
 			
+			}
+		
 			System.out.println("Contents of file:");		
 			System.out.println(stringBuffer.toString());
 		} catch (IOException e) {
@@ -56,6 +78,14 @@ public class GeneralPostfixConversion {
 	}
 	//end main method
 	
+	//TODO printStack
+	public void printStack(LinkedStack<String> st) {
+		//the formal parameter st is a linked list-based stack
+		//prints all elements of the stack beginning with the
+		//stack top element
+		//space between 2 consecutive elements
+		System.out.println("printStack");
+	}//end printStack
 	/*
 	 * @Method toPostFix
 	 * @precondition: infix only assuming integers no doubles
@@ -64,69 +94,111 @@ public class GeneralPostfixConversion {
 	*/
 	public static String toPostFix(String[] tokens) {
 		// Meaningful names for characters
-		final char C_LEFT_PARENS  = '(';
-		final char C_RIGHT_PARENS = ')';
+		String C_LEFT_PARENS  = "(";
+		String C_RIGHT_PARENS = ")";
 		LinkedStack<String> operandStack = new LinkedStack<String>();
 		LinkedStack<String> operatorStack = new LinkedStack<String>();
+		int i = 0;
+		int cnt = 0;
+		int tmp = 0;
+		for (int x = 0; x < tokens.length; x++) {//convert an infix expression to a postfix expression, general case	
+			String token = tokens[x];
+//			do {
+				if (token.equals(C_LEFT_PARENS)
+//						|| operatorStack.isEmpty()
+//						|| rank(token.charAt(i)) > rank(operatorStack.peek())
+						) {//token is left parens
+					if (validAlphaNum(token) == true) {
+						operandStack.push(token);
+					}
+									
+				} else if (token.equals(C_RIGHT_PARENS)
+//						|| token.isEmpty()
+						) {//token is a right parens or is empty to start next expression
+//					while (!operatorStack.peek().equals("(")) {
+						operandStack.push(operationCombine(operatorStack, operandStack));
+//					}
+//					operatorStack.pop();
+//					operandStack.push(operationCombine(operatorStack, operandStack));
+				} else if (validOperator(token) == true) {//token is an operator
+					operatorStack.push(token);
+//					if (operatorStack.peek() != null) {
+//						if (rank(token) > rank(operatorStack.peek())) {
+//							operatorStack.push(token);	
+//						}
+//							
+//					}
+					
+				} else {//default, assume its an operand
+//					if (validAlphaNum(token) == true) {
+						operandStack.push(token);	
+//					} 
+				}
+				i++;
+//			} while (i < tmp);
+
+		} 
+		//operandStack.push(operationCombine(operatorStack, operandStack));
+
 		
-		for (int i = 0; i < tokens.length; i++) {
-			String token = tokens[i];
-			//TODO fix logic to match Pseudocode algo requirements
-			if (validOp(token)) {
-				operandStack.push(token);
-			}
-
-			else if (token.equals(C_LEFT_PARENS) || operatorStack.isEmpty()
-					|| rank(token) > rank(operatorStack.peek())) {
-				operatorStack.push(token);
-			}
-
-			else if (token.equals(C_RIGHT_PARENS)) {
-				while (!operatorStack.peek().equals(C_LEFT_PARENS)) {
-					operandStack.push(operationCombine(operatorStack, operandStack));
-				}
-				operatorStack.pop();
-			}
-			
-			else if( rank(token) <= rank(operatorStack.peek())){
-				while(!operatorStack.isEmpty() && rank(token) <= rank(operatorStack.peek())){
-					operandStack.push(operationCombine(operatorStack, operandStack));
-				}
-				operatorStack.push(token);
-			}
-		}
-
-		while( !operatorStack.isEmpty() ) {
-			operandStack.push(operationCombine(operatorStack, operandStack));
-		}
 		//the corresponding postfix expresison
 		return (operandStack.peek());		
 	}//end toPostFix
 	
-	//TODO printStack
-	public void printStack(LinkedStack<String> st) {
-		//the formal parameter st is a linked list-based stack
-		//prints all elements of the stack beginning with the
-		//stack top element
-		//space between 2 consecutive elements
-	}//end printStack
-	
 	/*
-	 * @Name: isOperand
+	 * @Name: operationCombine
 	 * 
 	 * @Function/Purpose: Validates tokens
 	 * 
 	 * @Parameters:
-	 * 		{vc} validOperand
+	 * 		{vc} validNumber
 	 * 
 	 * @Additionl Comments: 
 	 * 
 	 * @Return {boolean} true/false
 	 */
-	public static boolean validOp(String validOperand) {
-		return !(validOperand.equals("+") || validOperand.equals("-")
-				|| validOperand.equals("/") || validOperand.equals("*") 
-				|| validOperand.equals("(") || validOperand.equals(")"));
+	public static String operationCombine(LinkedStack<String> operatorStack, LinkedStack<String> operandStack){
+		String operator = operatorStack.pop();
+		String rightOperand = operandStack.pop();
+		String leftOperand = operandStack.pop();
+		String postFixExp;
+//		String testOperand = operandStack.pop();
+		//Assume Integers ONLY as stated by requirements
+		if (validNum(leftOperand, 0) == true && validNum(rightOperand, 0) == true){
+			int left = Integer.parseInt(leftOperand);
+			int right = Integer.parseInt(rightOperand);
+			int result = 0;
+			if (operator.equals("+")){
+				result = left + right;
+			}else if (operator.equals("-")){
+				result = left - right;
+			}else if (operator.equals("*")){
+				result = left * right;
+			}else if (operator.equals("/")){
+				result = left / right;
+			}
+			return "" + result;
+			
+		} 
+		String operand = "( " + leftOperand + " "+ rightOperand + " " + operator +" )";
+		return operand;
+	}
+	
+	/*
+	 * @Name: validOperator
+	 * 
+	 * @Function/Purpose: Validates tokens
+	 * 
+	 * @Parameters:
+	 * 		{vc} validOperator
+	 * 
+	 * @Additionl Comments: 
+	 * 
+	 * @Return {boolean} true/false
+	 */
+	public static boolean validOperator(String validOperator) {
+		return (validOperator.equals("+") || validOperator.equals("-")
+				|| validOperator.equals("/") || validOperator.equals("*"));
 	}//end isOperand
 	
 	/*
@@ -165,41 +237,72 @@ public class GeneralPostfixConversion {
 		return validInput;
 
 	}// end method	
+	
 	/*
-	 * @Name: operationCombine
+	 * @Name: validNum
 	 * 
-	 * @Function/Purpose: Validates tokens
+	 * @Function/Purpose: Validates number input
 	 * 
 	 * @Parameters:
-	 * 		{vc} validNumber
+	 * 		{vc} String input
+	 * 		{i4} flag
+	 * @Additionl Comments: called from validate method
 	 * 
-	 * @Additionl Comments: 
-	 * 
-	 * @Return {boolean} true/false
+	 * @Return true/false based on valid 
 	 */
-	public static String operationCombine(LinkedStack<String> operatorStack, LinkedStack<String> operandStack){
-		String operator = operatorStack.pop();
-		String rightOperand = operandStack.pop();
-		String leftOperand = operandStack.pop();
-		if (validAlphaNum(rightOperand) && validAlphaNum(leftOperand)){
-			int left = Integer.parseInt(leftOperand);
-			int right = Integer.parseInt(rightOperand);
-			int result = 0;
-			if (operator.equals("+")){
-				result = left + right;
-			}else if (operator.equals("-")){
-				result = left - right;
-			}else if (operator.equals("*")){
-				result = left * right;
-			}else if (operator.equals("/")){
-				result = left / right;
+	public static boolean validNum(String userInput, int flag) {
+		boolean validInput = false;
+
+		switch (flag) {
+		case 0:
+			try {
+
+				int chkInt = Integer.parseInt(userInput);
+				validInput = true;
+
+			} catch (NumberFormatException nfe) {
+
+				validInput = false;
+
 			}
-			return "" + result;
-			
+			break;
+
+		case 1:
+
+			try {
+
+				Float chkFloat = Float.parseFloat(userInput);
+				validInput = true;
+
+			} catch (NumberFormatException nfe) {
+
+				validInput = false;
+
+			}
+			break;
+
+		case 2:
+
+			try {
+
+				Double chkDouble = Double.parseDouble(userInput);
+				validInput = true;
+
+			} catch (NumberFormatException nfe) {
+
+				validInput = false;
+
+			}
+			break;
+
+		default:
+			validInput = false;
+			break;
 		}
-		String operand = "(" + operator + " " + leftOperand + " "+ rightOperand + ")";
-		return operand;
-	}
+
+		return validInput;
+
+	}// end method
 
 	public static int rank(String s) {
 		if (s.equals("+") || s.equals("-"))
@@ -210,6 +313,49 @@ public class GeneralPostfixConversion {
 			return 0;
 	}
 
+	public static boolean isBalanced(String expression)
+	// Postcondition: A true return value indicates that the parentheses in the
+	// given expression are balanced. Otherwise the return value is false.
+	// Note that characters other than ( ) { } and [ ] are ignored.
+	{
+	   // Meaningful names for characters
+	   final char LEFT_NORMAL  = '(';
+	   final char RIGHT_NORMAL = ')';
+	   final char LEFT_CURLY   = '{';
+	   final char RIGHT_CURLY  = '}';
+	   final char LEFT_SQUARE  = '[';
+	   final char RIGHT_SQUARE = ']';
+	   
+	   Stack<Character> store = new Stack<Character>( ); // Stores parens
+	   int i;                              // An index into the string
+	   boolean failed = false;             // Change to true for a mismatch
+	   
+	   for (i = 0; !failed && (i < expression.length( )); i++)
+	   {
+	      switch (expression.charAt(i))
+	      {	//if any of these cases are open
+	         case LEFT_NORMAL:
+	         case LEFT_CURLY:
+	         case LEFT_SQUARE: 
+	            store.push(expression.charAt(i));
+	            break;
+	         case RIGHT_NORMAL:
+	            if (store.isEmpty( ) || (store.pop( ) != LEFT_NORMAL))
+	               failed = true;
+	            break;
+	         case RIGHT_CURLY:
+	            if (store.isEmpty( ) || (store.pop( ) != LEFT_CURLY))
+	               failed = true;
+	            break;
+	         case RIGHT_SQUARE:
+	            if (store.isEmpty( ) || (store.pop( ) != LEFT_SQUARE))
+	               failed = true;
+	            break;
+	      }
+	   }
+	   
+	   return (store.isEmpty( ) && !failed);
+	}
 	
 
 
