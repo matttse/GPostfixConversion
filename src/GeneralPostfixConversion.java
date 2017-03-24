@@ -51,15 +51,13 @@ public class GeneralPostfixConversion {
 			//instantiate size of array of strings
 			tokenBufferLine = stringBuffer.toString().split(";");
 			for (int i = 0; i < tokenBufferLine.length; i++) {
-				expression = tokenBufferLine[i].replaceAll("\\s",  "");//.split(" ");
-				tokens = new String[expression.length()];
-				for (int j = 0; j < expression.length(); j++) {
-					tokens[j] = String.valueOf(expression.charAt(j));
 
-				}
+				tokens = tokenBufferLine[i].split(" ");
 				//only process if there are balanced legal stored expressions
 				if (tokens.length > 0) {
-					
+					String postFix;
+//					postFix = toPostFix(tokens);
+//					printStack(toPostFix(tokens));
 					System.out.println(toPostFix(tokens));
 					System.out.println("---------------------");
 					
@@ -79,9 +77,12 @@ public class GeneralPostfixConversion {
 	//end main method
 	
 	//TODO printStack
-	public void printStack(LinkedStack<String> st) {
-		//the formal parameter st is a linked list-based stack
+	public void printStack(LinkedStack<String> stack) {//the formal parameter st is a linked list-based stack
+		
 		//prints all elements of the stack beginning with the
+		for (int i = 0; i < stack.size(); i++) {
+			System.out.println(stack.pop());
+		}
 		//stack top element
 		//space between 2 consecutive elements
 		System.out.println("printStack");
@@ -98,51 +99,35 @@ public class GeneralPostfixConversion {
 		String C_RIGHT_PARENS = ")";
 		LinkedStack<String> operandStack = new LinkedStack<String>();
 		LinkedStack<String> operatorStack = new LinkedStack<String>();
-		int i = 0;
-		int cnt = 0;
-		int tmp = 0;
 		for (int x = 0; x < tokens.length; x++) {//convert an infix expression to a postfix expression, general case	
 			String token = tokens[x];
-//			do {
-				if (token.equals(C_LEFT_PARENS)
-//						|| operatorStack.isEmpty()
-//						|| rank(token.charAt(i)) > rank(operatorStack.peek())
-						) {//token is left parens
+				if (token.equals(C_LEFT_PARENS)) {//token is left parens
 					if (validAlphaNum(token) == true) {
 						operandStack.push(token);
 					}
 									
-				} else if (token.equals(C_RIGHT_PARENS)
-//						|| token.isEmpty()
-						) {//token is a right parens or is empty to start next expression
-//					while (!operatorStack.peek().equals("(")) {
-						operandStack.push(operationCombine(operatorStack, operandStack));
-//					}
-//					operatorStack.pop();
-//					operandStack.push(operationCombine(operatorStack, operandStack));
+				} else if (token.equals(C_RIGHT_PARENS)) {//token is a right parens or is empty to start next expression
+					operandStack.push(operationCombine(operatorStack, operandStack));
+//					break;
+
 				} else if (validOperator(token) == true) {//token is an operator
 					operatorStack.push(token);
-//					if (operatorStack.peek() != null) {
-//						if (rank(token) > rank(operatorStack.peek())) {
-//							operatorStack.push(token);	
-//						}
-//							
-//					}
+
 					
 				} else {//default, assume its an operand
-//					if (validAlphaNum(token) == true) {
-						operandStack.push(token);	
-//					} 
-				}
-				i++;
-//			} while (i < tmp);
-
-		} 
-		//operandStack.push(operationCombine(operatorStack, operandStack));
-
+					operandStack.push(token);	
+				} 
+		}
 		
 		//the corresponding postfix expresison
-		return (operandStack.peek());		
+		if (operatorStack.isEmpty()) {
+			return (operandStack.peek());	
+		} else {
+			
+			return(operationCombine(operatorStack, operandStack));	
+		}
+//		
+		
 	}//end toPostFix
 	
 	/*
