@@ -20,6 +20,7 @@ public class GeneralPostfixConversion {
  * 
  */
 	public static void main(String[] args) {
+		GeneralPostfixConversion postFixExp = new GeneralPostfixConversion();
 		//throws IOException
 		try {
 			File file = new File("C:/infixExpressions.txt");
@@ -36,9 +37,7 @@ public class GeneralPostfixConversion {
 			while ((line = bufferedReader.readLine()) != null) {
 				if (isBalanced(line)) {
 					stringBuffer.append(line);
-					stringBuffer.append(";\n");						
-					
-					
+					stringBuffer.append(";\n");	
 				} else {
 					System.out.println(line);
 					System.out.println("Not Balanced, fix infix expression\n");
@@ -55,16 +54,13 @@ public class GeneralPostfixConversion {
 				tokens = tokenBufferLine[i].split(" ");
 				//only process if there are balanced legal stored expressions
 				if (tokens.length > 0) {
-					String postFix;
-//					postFix = toPostFix(tokens);
-//					printStack(toPostFix(tokens));
-					System.out.println(toPostFix(tokens));
+					expression = postFixExp.toPostFix(tokens);
+					System.out.println("---------------------");					
+					System.out.println(expression);
 					System.out.println("---------------------");
 					
 				}	
-			
 			}
-		
 			System.out.println("Contents of file:");		
 			System.out.println(stringBuffer.toString());
 		} catch (IOException e) {
@@ -93,7 +89,8 @@ public class GeneralPostfixConversion {
 	 * the formal parameter tokens in an array of tokens
 	 * of an infix expression
 	*/
-	public static String toPostFix(String[] tokens) {
+	public String toPostFix(String[] tokens) {
+		GeneralPostfixConversion postFixExp = new GeneralPostfixConversion();
 		// Meaningful names for characters
 		String C_LEFT_PARENS  = "(";
 		String C_RIGHT_PARENS = ")";
@@ -101,33 +98,25 @@ public class GeneralPostfixConversion {
 		LinkedStack<String> operatorStack = new LinkedStack<String>();
 		for (int x = 0; x < tokens.length; x++) {//convert an infix expression to a postfix expression, general case	
 			String token = tokens[x];
-				if (token.equals(C_LEFT_PARENS)) {//token is left parens
-					if (validAlphaNum(token) == true) {
-						operandStack.push(token);
-					}
-									
-				} else if (token.equals(C_RIGHT_PARENS)) {//token is a right parens or is empty to start next expression
-					operandStack.push(operationCombine(operatorStack, operandStack));
-//					break;
-
-				} else if (validOperator(token) == true) {//token is an operator
-					operatorStack.push(token);
-
-					
-				} else {//default, assume its an operand
-					operandStack.push(token);	
-				} 
-		}
+			if (token.equals(C_LEFT_PARENS)) {//token is left parens
+				if (validAlphaNum(token) == true) {
+					operandStack.push(token);
+				}								
+			} else if (token.equals(C_RIGHT_PARENS)) {//token is a right parens or is empty to start next expression
+				operandStack.push(operationCombine(operatorStack, operandStack));
+			} else if (validOperator(token) == true) {//token is an operator
+				operatorStack.push(token);				
+			} else {//default, assume its an operand
+				operandStack.push(token);	
+			} 
+		}		
 		
 		//the corresponding postfix expresison
 		if (operatorStack.isEmpty()) {
 			return (operandStack.peek());	
-		} else {
-			
+		} else {			
 			return(operationCombine(operatorStack, operandStack));	
-		}
-//		
-		
+		}	
 	}//end toPostFix
 	
 	/*
@@ -146,8 +135,6 @@ public class GeneralPostfixConversion {
 		String operator = operatorStack.pop();
 		String rightOperand = operandStack.pop();
 		String leftOperand = operandStack.pop();
-		String postFixExp;
-//		String testOperand = operandStack.pop();
 		//Assume Integers ONLY as stated by requirements
 		if (validNum(leftOperand, 0) == true && validNum(rightOperand, 0) == true){
 			int left = Integer.parseInt(leftOperand);
@@ -162,8 +149,7 @@ public class GeneralPostfixConversion {
 			}else if (operator.equals("/")){
 				result = left / right;
 			}
-			return "" + result;
-			
+			return "" + result;			
 		} 
 		String operand = "( " + leftOperand + " "+ rightOperand + " " + operator +" )";
 		return operand;
