@@ -44,8 +44,7 @@ public class GeneralPostfixConversion {
 			//instantiate size of array of strings
 			tokenBufferLine = stringBuffer.toString().split(";");
 			for (int i = 0; i < tokenBufferLine.length; i++) {
-
-				tokens = tokenBufferLine[i].split(" ");
+				tokens = tokenBufferLine[i].replaceAll("\\s+", " ").split(" ");
 				//only process if there are balanced legal stored expressions
 				if (tokens.length > 0) {
 					postFixExp.toPostFix(tokens);				
@@ -88,6 +87,7 @@ public class GeneralPostfixConversion {
 		LinkedStack<String> operandStack = new LinkedStack<String>();
 		LinkedStack<String> operatorStack = new LinkedStack<String>();
 		LinkedStack<String> expStack = new LinkedStack<String>();
+		LinkedStack<String> cloneExpStack = new LinkedStack<String>();
 		String expression = "";
 		GeneralPostfixConversion postFixed = new GeneralPostfixConversion();
 		
@@ -117,21 +117,24 @@ public class GeneralPostfixConversion {
 				String left = operandStack.pop();
 				if (operatorStack.size() == 1) {//last operation
 					rOperator = operatorStack.pop();
-					postFixExp += (left + right + rOperator);
+					postFixExp += (left + " " + right + " " + rOperator + " ");
 				} else {//recombine in appropriate postfix notation
 					rOperator = operatorStack.pop();
 					lOperator = operatorStack.pop();		
-					postFixExp += (left + lOperator + right + rOperator);
+					postFixExp += (left + " " + lOperator + " " + right + " " + rOperator + " ");
 				}
 				//push expression back into a stack to be consumed by printStack
 				expStack.push(postFixExp);
 			}
 		}
-		
+		//clone stack to store as string
+		cloneExpStack = expStack.clone();
+		while (!cloneExpStack.isEmpty()){
+			expression += cloneExpStack.pop();
+		}
+		//send to print stack
 		postFixed.printStack(expStack);
-//		while (!expStack.isEmpty()){
-//			expression += expStack.pop();
-//		}
+
 		//the corresponding postfix expresison
 		return(expression);	
 			
@@ -293,15 +296,6 @@ public class GeneralPostfixConversion {
 		return validInput;
 
 	}// end method
-
-	public static int rank(String s) {
-		if (s.equals("+") || s.equals("-"))
-			return 1;
-		else if (s.equals("/") || s.equals("*"))
-			return 2;
-		else
-			return 0;
-	}
 
 	public static boolean isBalanced(String expression)
 	// Postcondition: A true return value indicates that the parentheses in the
