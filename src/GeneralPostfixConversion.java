@@ -8,19 +8,15 @@ import java.util.Stack;
 
 
 public class GeneralPostfixConversion {
+	public LinkedStack<String> expressionStack = new LinkedStack<String>();
 /*
-3 * 12
-3 * X
-( Y - 12 )
-3 * X + ( Y )
-3 * X + ( 12 ) - Z 
-3 * X + ( Y - 12 ) 
+ * Example File Input:  tokens must be separated by one or more spaces
+( ( ( A + B ) *C ) - ( ( D - E ) * ( F + G ) ) )
 3 * X + ( Y - 12 ) - Z 
-(((A+B)*C)-((D-E)*(F+G)))
  * 
  */
 	public static void main(String[] args) {
-		GeneralPostfixConversion postFixExp = new GeneralPostfixConversion();
+		GeneralPostfixConversion postFixExp = new GeneralPostfixConversion();		
 		//throws IOException
 		try {
 			File file = new File("C:/infixExpressions.txt");
@@ -29,9 +25,7 @@ public class GeneralPostfixConversion {
 			StringBuffer stringBuffer = new StringBuffer();
 			String line;
 			String[] tokenBufferLine;//stores each line expression
-			String expression;
-			String[] tokens;//tokens expression 
-			
+			String[] tokens;//tokens expression 			
 			//while there is an expression to read
 			//reads infix expression from input file
 			while ((line = bufferedReader.readLine()) != null) {
@@ -54,34 +48,30 @@ public class GeneralPostfixConversion {
 				tokens = tokenBufferLine[i].split(" ");
 				//only process if there are balanced legal stored expressions
 				if (tokens.length > 0) {
-					expression = postFixExp.toPostFix(tokens);
-					System.out.println("---------------------");					
-					System.out.println(expression);
-					System.out.println("---------------------");
-					
+					postFixExp.toPostFix(tokens);				
 				}	
 			}
+
 			System.out.println("Contents of file:");		
 			System.out.println(stringBuffer.toString());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}//end trycatch
 		
-		//TODO prints the converted postfix expression
-
 	}
 	//end main method
-	
-	//TODO printStack
+	/*
+	 * @Method printStack
+	 * @precondition: stack
+	*/
 	public void printStack(LinkedStack<String> stack) {//the formal parameter st is a linked list-based stack
-		
 		//prints all elements of the stack beginning with the
-		for (int i = 0; i < stack.size(); i++) {
-			System.out.println(stack.pop());
+		while (!stack.isEmpty()) {
+			System.out.print(stack.pop());
 		}
 		//stack top element
 		//space between 2 consecutive elements
-		System.out.println("printStack");
+		System.out.println("\n---------------");
 	}//end printStack
 	/*
 	 * @Method toPostFix
@@ -90,12 +80,17 @@ public class GeneralPostfixConversion {
 	 * of an infix expression
 	*/
 	public String toPostFix(String[] tokens) {
-		GeneralPostfixConversion postFixExp = new GeneralPostfixConversion();
+		//A B + C * D E - F G + * -
+		//3 X * Y 12 - + Z -
 		// Meaningful names for characters
 		String C_LEFT_PARENS  = "(";
 		String C_RIGHT_PARENS = ")";
 		LinkedStack<String> operandStack = new LinkedStack<String>();
 		LinkedStack<String> operatorStack = new LinkedStack<String>();
+		LinkedStack<String> expStack = new LinkedStack<String>();
+		String expression = "";
+		GeneralPostfixConversion postFixed = new GeneralPostfixConversion();
+		
 		for (int x = 0; x < tokens.length; x++) {//convert an infix expression to a postfix expression, general case	
 			String token = tokens[x];
 			if (token.equals(C_LEFT_PARENS)) {//token is left parens
@@ -103,20 +98,43 @@ public class GeneralPostfixConversion {
 					operandStack.push(token);
 				}								
 			} else if (token.equals(C_RIGHT_PARENS)) {//token is a right parens or is empty to start next expression
-				operandStack.push(operationCombine(operatorStack, operandStack));
+				operandStack.push(subOpCombine(operatorStack, operandStack));
 			} else if (validOperator(token) == true) {//token is an operator
 				operatorStack.push(token);				
 			} else {//default, assume its an operand
 				operandStack.push(token);	
 			} 
-		}		
-		
-		//the corresponding postfix expresison
-		if (operatorStack.isEmpty()) {
-			return (operandStack.peek());	
-		} else {			
-			return(operationCombine(operatorStack, operandStack));	
 		}	
+		
+		while(!operandStack.isEmpty()) {//rebuild subExpression to expression string
+			//initialize temp strings
+			String postFixExp = "", rOperator = "", lOperator = "";
+			if (operatorStack.isEmpty()){//if there were no other operations to perform
+				postFixExp += operandStack.pop();
+				expStack.push(postFixExp);
+			} else {//combine subOperations into string
+				String right = operandStack.pop();
+				String left = operandStack.pop();
+				if (operatorStack.size() == 1) {//last operation
+					rOperator = operatorStack.pop();
+					postFixExp += (left + right + rOperator);
+				} else {//recombine in appropriate postfix notation
+					rOperator = operatorStack.pop();
+					lOperator = operatorStack.pop();		
+					postFixExp += (left + lOperator + right + rOperator);
+				}
+				//push expression back into a stack to be consumed by printStack
+				expStack.push(postFixExp);
+			}
+		}
+		
+		postFixed.printStack(expStack);
+//		while (!expStack.isEmpty()){
+//			expression += expStack.pop();
+//		}
+		//the corresponding postfix expresison
+		return(expression);	
+			
 	}//end toPostFix
 	
 	/*
@@ -131,7 +149,7 @@ public class GeneralPostfixConversion {
 	 * 
 	 * @Return {boolean} true/false
 	 */
-	public static String operationCombine(LinkedStack<String> operatorStack, LinkedStack<String> operandStack){
+	public static String subOpCombine(LinkedStack<String> operatorStack, LinkedStack<String> operandStack){
 		String operator = operatorStack.pop();
 		String rightOperand = operandStack.pop();
 		String leftOperand = operandStack.pop();
@@ -151,7 +169,8 @@ public class GeneralPostfixConversion {
 			}
 			return "" + result;			
 		} 
-		String operand = "( " + leftOperand + " "+ rightOperand + " " + operator +" )";
+//		String operand = "( " + leftOperand + " "+ rightOperand + " " + operator +" )";
+		String operand = leftOperand + " " + rightOperand + " " + operator;
 		return operand;
 	}
 	
