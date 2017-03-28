@@ -11,8 +11,9 @@ public class GeneralPostfixConversion {
 	public LinkedStack<String> expressionStack = new LinkedStack<String>();
 /*
  * Example File Input:  tokens must be separated by one or more spaces
-( ( ( A + B ) *C ) - ( ( D - E ) * ( F + G ) ) )
 3 * X + ( Y - 12 ) - Z 
+( ( ( A + B ) * C ) - ( ( D - E ) * ( F + G ) ) )
+X + Y + Z + 12 - 43 * F * T / 4 * S * ( 6 + 43 * X )
  * 
  */
 	public static void main(String[] args) {
@@ -90,9 +91,10 @@ public class GeneralPostfixConversion {
 		LinkedStack<String> cloneExpStack = new LinkedStack<String>();
 		String expression = "";
 		GeneralPostfixConversion postFixed = new GeneralPostfixConversion();
-		
-		for (int x = 0; x < tokens.length; x++) {//convert an infix expression to a postfix expression, general case	
-			String token = tokens[x];
+		int i = 0;
+		int flag = 0;
+		do {//convert an infix expression to a postfix expression, general case
+			String token = tokens[i];
 			if (token.equals(C_LEFT_PARENS)) {//token is left parens
 				if (validAlphaNum(token) == true) {
 					operandStack.push(token);
@@ -100,11 +102,12 @@ public class GeneralPostfixConversion {
 			} else if (token.equals(C_RIGHT_PARENS)) {//token is a right parens or is empty to start next expression
 				operandStack.push(subOpCombine(operatorStack, operandStack));
 			} else if (validOperator(token) == true) {//token is an operator
-				operatorStack.push(token);				
+				operatorStack.push(token);						
 			} else {//default, assume its an operand
 				operandStack.push(token);	
 			} 
-		}	
+			i++;
+		} while (i < tokens.length);
 		
 		while(!operandStack.isEmpty()) {//rebuild subExpression to expression string
 			//initialize temp strings
@@ -121,7 +124,7 @@ public class GeneralPostfixConversion {
 				} else {//recombine in appropriate postfix notation
 					rOperator = operatorStack.pop();
 					lOperator = operatorStack.pop();		
-					postFixExp += (left + " " + lOperator + " " + right + " " + rOperator + " ");
+					postFixExp += (" " + left + " " + lOperator + " " + right + " " + rOperator + " ");
 				}
 				//push expression back into a stack to be consumed by printStack
 				expStack.push(postFixExp);
