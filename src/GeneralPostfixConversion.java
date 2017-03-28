@@ -87,12 +87,13 @@ X + Y + Z + 12 - 43 * F * T / 4 * S * ( 6 + 43 * X )
 		String C_RIGHT_PARENS = ")";
 		LinkedStack<String> operandStack = new LinkedStack<String>();
 		LinkedStack<String> operatorStack = new LinkedStack<String>();
+		LinkedStack<String> outputStack = new LinkedStack<String>();
+		LinkedStack<String> tempTwoStack = new LinkedStack<String>();
 		LinkedStack<String> expStack = new LinkedStack<String>();
 		LinkedStack<String> cloneExpStack = new LinkedStack<String>();
 		String expression = "";
 		GeneralPostfixConversion postFixed = new GeneralPostfixConversion();
 		int i = 0;
-		int flag = 0;
 		do {//convert an infix expression to a postfix expression, general case
 			String token = tokens[i];
 			if (token.equals(C_LEFT_PARENS)) {//token is left parens
@@ -100,9 +101,27 @@ X + Y + Z + 12 - 43 * F * T / 4 * S * ( 6 + 43 * X )
 					operandStack.push(token);
 				}								
 			} else if (token.equals(C_RIGHT_PARENS)) {//token is a right parens or is empty to start next expression
-				operandStack.push(subOpCombine(operatorStack, operandStack));
+				operandStack.push(subOpCombine(operatorStack, operandStack));	
+				
 			} else if (validOperator(token) == true) {//token is an operator
-				operatorStack.push(token);						
+				if (operatorStack.isEmpty()){//if no other operators
+					operatorStack.push(token);
+				} else if (operatorStack.size() > 1
+							&& (operatorStack.peek().equals("-") && token.equals("*")
+							|| operatorStack.peek().equals("-") && token.equals("/")
+							|| operatorStack.peek().equals("+") && token.equals("*")
+							|| operatorStack.peek().equals("+") && token.equals("/"))) {//check operational stack order	
+						
+						String t1 = operatorStack.pop();
+						String t2 = operatorStack.pop();
+						operatorStack.push(t2);
+						operatorStack.push(t1);
+					
+				} else {
+					operatorStack.push(token);
+				}
+			
+										
 			} else {//default, assume its an operand
 				operandStack.push(token);	
 			} 
@@ -116,18 +135,23 @@ X + Y + Z + 12 - 43 * F * T / 4 * S * ( 6 + 43 * X )
 				postFixExp += operandStack.pop();
 				expStack.push(postFixExp);
 			} else {//combine subOperations into string
-				String right = operandStack.pop();
-				String left = operandStack.pop();
-				if (operatorStack.size() == 1) {//last operation
-					rOperator = operatorStack.pop();
-					postFixExp += (left + " " + right + " " + rOperator + " ");
-				} else {//recombine in appropriate postfix notation
-					rOperator = operatorStack.pop();
-					lOperator = operatorStack.pop();		
-					postFixExp += (" " + left + " " + lOperator + " " + right + " " + rOperator + " ");
+				if (operandStack.size() == 1) {
+					postFixExp = operandStack.pop();
+				} else {
+					String right = operandStack.pop();
+					String left = operandStack.pop();
+					if (operatorStack.size() == 1) {//last operation
+						rOperator = operatorStack.pop();
+						postFixExp += (left + " " + right + " " + rOperator + " ");
+					} else {//recombine in appropriate postfix notation
+						rOperator = operatorStack.pop();
+						lOperator = operatorStack.pop();		
+						postFixExp += (" " + left + " " + lOperator + " " + right + " " + rOperator + " ");
+					}
 				}
 				//push expression back into a stack to be consumed by printStack
 				expStack.push(postFixExp);
+
 			}
 		}
 		//clone stack to store as string
@@ -156,27 +180,36 @@ X + Y + Z + 12 - 43 * F * T / 4 * S * ( 6 + 43 * X )
 	 * @Return {boolean} true/false
 	 */
 	public static String subOpCombine(LinkedStack<String> operatorStack, LinkedStack<String> operandStack){
-		String operator = operatorStack.pop();
-		String rightOperand = operandStack.pop();
-		String leftOperand = operandStack.pop();
-		//Assume Integers ONLY as stated by requirements
-		if (validNum(leftOperand, 0) == true && validNum(rightOperand, 0) == true){
-			int left = Integer.parseInt(leftOperand);
-			int right = Integer.parseInt(rightOperand);
-			int result = 0;
-			if (operator.equals("+")){
-				result = left + right;
-			}else if (operator.equals("-")){
-				result = left - right;
-			}else if (operator.equals("*")){
-				result = left * right;
-			}else if (operator.equals("/")){
-				result = left / right;
+		String operand = "";
+		if (!operatorStack.isEmpty()) {
+			String operator = operatorStack.pop();
+			String rightOperand = operandStack.pop();
+			String leftOperand = operandStack.pop();
+			//Assume Integers ONLY as stated by requirements
+			if (validNum(leftOperand, 0) == true && validNum(rightOperand, 0) == true){
+				int left = Integer.parseInt(leftOperand);
+				int right = Integer.parseInt(rightOperand);
+				int result = 0;
+				if (operator.equals("+")){
+					result = left + right;
+				}else if (operator.equals("-")){
+					result = left - right;
+				}else if (operator.equals("*")){
+					result = left * right;
+				}else if (operator.equals("/")){
+					result = left / right;
+				}
+				return "" + result;			
 			}
-			return "" + result;			
-		} 
+			operand = leftOperand + " " + rightOperand + " " + operator;
+		} else {
+			String rightOperand = operandStack.pop();
+			String leftOperand = operandStack.pop();			
+			operand = " " + leftOperand + " " + rightOperand + " ";
+		}
+
 //		String operand = "( " + leftOperand + " "+ rightOperand + " " + operator +" )";
-		String operand = leftOperand + " " + rightOperand + " " + operator;
+
 		return operand;
 	}
 	
